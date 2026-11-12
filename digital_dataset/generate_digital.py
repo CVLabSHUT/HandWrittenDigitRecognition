@@ -77,6 +77,61 @@ def render_ink(char, font_path, px):
     return canvas.crop(box)
 
 
+def looks_like_box(ink):
+    """True for a hollow rectangle (also with rounded or slanted corners), the usual placeholder for a missing glyph."""
+    arr = np.asarray(ink) > 40
+    ys, xs = np.nonzero(arr)
+    if len(ys) == 0:
+        return False
+    arr = arr[ys.min():ys.max() + 1, xs.min():xs.max() + 1]  # tight box around the clearly inked pixels
+    h, w = arr.shape
+    if h < 12 or w < 12:
+        return False
+    band = max(2, round(0.04 * min(h, w)))
+    edges = (arr[:band].mean(), arr[-band:].mean(), arr[:, :band].mean(), arr[:, -band:].mean())
+    interior = arr[h // 4:3 * h // 4, w // 4:3 * w // 4].mean()  # the border of a box can be thick
+    return min(edges) > 0.55 and interior < 0.12
+
+
+def looks_like_block(ink):
+    """True for a solid, roughly square-ish block that fills its bounding box (no digit does, except thin bars)."""
+    arr = np.asarray(ink) > 40
+    ys, xs = np.nonzero(arr)
+    if len(ys) == 0:
+        return False
+    arr = arr[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    h, w = arr.shape
+    return arr.mean() > 0.75 and min(h, w) > 0.2 * max(h, w)
+
+
+def nearly_identical(a, b):
+    """Two ink images of the same size that differ in fewer than 2% of the grey value range."""
+    if a.size != b.size:
+        return False
+    diff = np.abs(np.asarray(a, dtype=np.int16) - np.asarray(b, dtype=np.int16))
+    return diff.mean() / 255 < 0.02
+
+
+def has_placeholder(inks, font_path, px, check_shapes=False):
+    """True if one of the digit images is a placeholder rather than a real glyph.
+
+    A font can list a digit in its character table and still draw a "missing
+    character" box for it, so the character table alone is not enough. Three
+    signs are checked: the image equals what the font draws for a character it
+    certainly does not have, it is a hollow box or a solid block, or two digits
+    look the same.
+    """
+    missing = render_ink("􏿿", font_path, px)
+    if missing is not None and any(nearly_identical(ink, missing) for ink in inks):
+        return True
+    if check_shapes:  # only used where such boxes were found: Arabic-script fonts
+        if any(looks_like_box(ink) for ink in inks[1:]):  # zero is a dot or a ring in several scripts
+            return True
+        if any(looks_like_block(ink) for ink in inks[2:]):  # one is a bar in several scripts
+            return True
+    return any(nearly_identical(inks[i], inks[j]) for i in range(len(inks)) for j in range(i + 1, len(inks)))
+
+
 def place(ink, size, scale, center="bbox"):
     """Resize `ink` by `scale` and put it on a size x size canvas, centred."""
     w, h = ink.size
@@ -113,6 +168,9 @@ def render_font_digits(digits, font_path, size, fill, center="bbox", normalize="
         if all(ink is not None for ink in inks):
             break
     else:
+        return None
+    arabic_script = 0x0600 <= ord(digits[0]) <= 0x06FF
+    if has_placeholder(inks, font_path, px, check_shapes=arabic_script):
         return None
 
     if normalize == "font":

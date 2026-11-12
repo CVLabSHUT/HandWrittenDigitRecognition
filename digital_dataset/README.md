@@ -20,8 +20,8 @@ fonts and settings always give the same pixels.
 | Script (`--scripts` value) | Digits | Font folder | Usable fonts |
 |---|---|---|---|
 | `latin` | 0 1 2 3 4 5 6 7 8 9 | `English`, `ARDIS` | 140 |
-| `arabic` | ٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ | `Arabic` | 472 |
-| `persian_urdu` | ۰ ۱ ۲ ۳ ۴ ۵ ۶ ۷ ۸ ۹ | `Farsi_Urdu` | 410 |
+| `arabic` | ٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ | `Arabic` | 438 |
+| `persian_urdu` | ۰ ۱ ۲ ۳ ۴ ۵ ۶ ۷ ۸ ۹ | `Farsi_Urdu` | 395 |
 | `chinese` | 零 一 二 三 四 五 六 七 八 九 | `Chinese` | 45 |
 | `gujarati` | ૦ ૧ ૨ ૩ ૪ ૫ ૬ ૭ ૮ ૯ | `Gujarati` | 34 |
 | `gurmukhi` | ੦ ੧ ੨ ੩ ੪ ੫ ੬ ੭ ੮ ੯ | `Gurmukhi` | 23 |
@@ -29,9 +29,34 @@ fonts and settings always give the same pixels.
 | `kannada` | ೦ ೧ ೨ ೩ ೪ ೫ ೬ ೭ ೮ ೯ | `Kannada` | 20 |
 | `tibetan` | ༠ ༡ ༢ ༣ ༤ ༥ ༦ ༧ ༨ ༩ | `Tibetan` | 28 |
 
-That makes 1,189 fonts and 11,890 images per image size and fill setting. A font
-is skipped when it has no glyph for one of the ten digits. Persian and Urdu share
-one set because both use the same Unicode digits.
+That makes 1,140 fonts and 11,400 images per image size and fill setting. Persian
+and Urdu share one set because both use the same Unicode digits.
+
+A font is skipped when it has no glyph for one of the ten digits, and also when it
+only draws a placeholder for one of them. Some fonts list a digit in their character
+table but draw the "missing character" rectangle, or a solid block, for it. The
+generator detects this (the image equals what the font draws for a character it
+certainly lacks, it is a hollow box or solid block in the Arabic-script fonts, or two
+digits look identical) and skips such fonts: 49 of the 1,189 fonts with complete
+digit tables were removed this way. A few unusual but real glyph shapes (very
+decorative fonts) can remain.
+
+## The dataset of the paper
+
+The paper describes DIGITal as **100,000 images of 128 x 128 pixels**: ten groups of
+10,000 images, 1,000 per digit (Farsi and Urdu share a group, and so do ISI Bangla
+and BanglaLekha; ARDIS and English are separate). `generate_paper_dataset.py`
+builds exactly this. Groups with fewer than 1,000 fonts are filled up by reusing
+the fonts with a random horizontal shift and rotation, the augmentation the paper
+uses to balance languages with few fonts. The paper gives neither the shift nor the
+angle, so they are options (`--max-shift 10`, `--max-rotation 15`).
+
+```bash
+python digital_dataset/generate_paper_dataset.py --out generated
+```
+
+`make_release.py` builds the upload package of this version (images, font-based
+splits, font license table, dataset card, checksums).
 
 ## Generating the images
 
@@ -97,7 +122,7 @@ font are preserved: the Arabic zero stays a small dot and a "1" stays narrow.
 </p>
 <p align="center"><em>The digit 5 in 14 different fonts. Top row: first version of the generator (size, position and clipping depend on the font). Bottom row: current generator; the red square is the fixed frame.</em></p>
 
-The placement was checked on all 1,189 fonts at 32 x 32 with the default fill: the
+The placement was checked on all 1,140 usable fonts at 32 x 32 with the default fill: the
 largest digit of every font is exactly 22 pixels (0.7 x 32, rounded) and its
 centre is within half a pixel of the image centre.
 

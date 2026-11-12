@@ -46,10 +46,10 @@ pip install -r requirements.txt
 
 All commands are run from the repository root.
 
-**1. Generate the printed digits** (11,890 images of 128 x 128 per image size and fill setting):
+**1. Generate the printed digits** (the DIGITal dataset of the paper: 100,000 images of 128 x 128):
 
 ```bash
-python digital_dataset/generate_digital.py --sizes 128 --format npz --out generated
+python digital_dataset/generate_paper_dataset.py --out generated
 ```
 
 **2. Train the restoration U-Net:**
