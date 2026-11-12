@@ -1,131 +1,109 @@
-## Advancing Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning
-This is the implementation of the paper "Advancing Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning" by Amirreza Fateh, Reza Tahmasbi Birgani, Mansoor Fateh, and Vahid Abolghasemi.
+# Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning
 
+Code for the paper **Advancing Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning**
+by Amirreza Fateh, Reza Tahmasbi Birgani, Mansoor Fateh and Vahid Abolghasemi, published in
+[IEEE Access, 2024](https://ieeexplore.ieee.org/document/10474004).
 
-<br>
-<p align="middle">
-    <img src="data/asset/overview.png">
+<p align="center">
+  <img src="assets/overview.png" width="760" alt="Overview of the method">
 </p>
-For more information, check out our paper on [IEEEXplore](https://ieeexplore.ieee.org/document/10474004)..
 
-## Requirements
+## Method
 
-- Python 3.12.2
-- Keras 3.1.1
-- Tensorflow 2.16.1
-- scipy 1.12.0
-- scikit-learn 1.4.1
-- numpy 1.26.4
-- pandas 2.2.1
-- opencv-python 4.9.0.80
-- seaborn 0.13.2
-- matplotlib 3.8.3
+Handwritten digits from twelve scripts are recognised in three stages (see the figure above):
 
-## .bib citation
-To cite the paper (early access version), use the following format:
+1. **Restoration.** An MRA U-Net, a U-Net with a multi-resolution attention (MRA) module on each skip
+   connection, is trained on printed digits ([DIGITal](digital_dataset/README.md)). Its input is a
+   degraded copy of the image (shrunk and enlarged again) and its target is the original.
+   Handwritten images are low-resolution and blurry once they are enlarged to 128 x 128, so the network is
+   then used, frozen, to enhance them.
+2. **Language recognition.** A CNN with MRA modules, working on the restored image, predicts which of the
+   twelve scripts a digit is written in.
+3. **Digit recognition.** For each language, the convolutional part of the language classifier is reused and
+   frozen, and a new dense head is trained to classify the digit.
 
-    @article{fateh2024advancing,
-    title={Advancing Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning},
-    author={Fateh, Amirreza and Tahmasbi Birgani, Reza and Fateh, Mansoor and Abolghasemi, Vahid},
-    journal={IEEE Access},
-    year={2024},
-    publisher={Institute of Electrical and Electronics Engineers}
-    }
----
+## Repository layout
 
-## SUT DIGITal Dataset License
-[License](#License)
-
-### Overview
-The DIGITal dataset is provided for research and educational purposes. By using the dataset, you agree to comply with these terms.
-
-### Terms of Use
-1. The DIGITal dataset is for non-commercial use only.
-2. You may cite the following paper when using the dataset:
-   - "Advancing Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning" IEEEXplore, 2024. [Link to Paper](https://ieeexplore.ieee.org/document/10474004).
-
-### Disclaimer
-1. The DIGITal dataset is provided "as is" without any warranty.
-2. The authors and organization shall not be liable for any damages arising from the use of the dataset.
-
-### Contact Information
-For inquiries, please contact:
-- Email: rezatb.ds@gmail.com
-
-<!--
-Conda environment settings:
-```bash
-conda create -n protoformer python=3.8
-conda activate protoformer
-
-conda install pytorch=1.8.1 torchvision cudatoolkit=11.1 -c pytorch
-conda install -c conda-forge tensorflow
-pip install tensorboardX
+```
+mranet/             models (MRA module, MRA U-Net, classifiers, baselines), data loading, helpers
+scripts/            train_restoration, train_language, train_digit, evaluate
+digital_dataset/    generator, fonts and documentation of the printed DIGITal dataset
+datasets/           the twelve handwritten datasets (see datasets/README.md)
+assets/             figures
 ```
 
-## Preparing Few-Shot Segmentation Datasets
-Download following datasets:
+## Installation
 
-> #### 1. Handwritten digit dataset
-> Download Handwritten digit dataset (train/val data):
-> ```bash
-> wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
-> ```
-> Download handwritten digit dataset from [[Google Drive](https://)].
->
-Create a directory '../Datasets' for the above two few-shot segmentation datasets and appropriately place each dataset to have following directory structure:
+The code was written for Python 3.10 or newer with TensorFlow 2.16.1 and Keras 3.1.1.
 
-    ../                         # parent directory
-    ├── ./                      # current (project) directory
-    │   ├── common/             # (dir.) helper functions
-    │   ├── data/               # (dir.) dataloaders and splits for each FSSS dataset
-    │   ├── model/              # (dir.) implementation of ProtoFormer model 
-    │   ├── README.md           # intstruction for reproduction
-    │   ├── train.py            # code for training HSNet
-    │   └── test.py             # code for testing HSNet
-    └── Datasets/
-        ├── VOC2012/            # PASCAL VOC2012 devkit
-        │   ├── Annotations/
-        │   ├── ImageSets/
-        │   ├── ...
-        │   └── SegmentationClassAug/
-        ├── COCO2014/           
-            ├── annotations/
-            │   ├── train2014/  # (dir.) training masks (from Google Drive) 
-            │   ├── val2014/    # (dir.) validation masks (from Google Drive)
-            │   └── ..some json files..
-            ├── train2014/
-            └── val2014/
+```bash
+python -m venv .venv
+source .venv/bin/activate        # on Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-> ### Babysitting training:
-> Use tensorboard to babysit training progress:
-> - For each experiment, a directory that logs training progress will be automatically generated under logs/ directory. 
-> - From terminal, run 'tensorboard --logdir logs/' to monitor the training progress.
-> - Choose the best model when the validation (mIoU) curve starts to saturate. 
+## Reproducing the pipeline
 
+All commands are run from the repository root.
 
-## Testing
+**1. Generate the printed digits** (11,890 images of 128 x 128 per image size and fill setting):
 
-> ### 1. PASCAL-5<sup>i</sup>
-> Pretrained models are available on our [[Google Drive](https://drive.google.com/drive/folders/1xomPmr6dYpjDDraIQJS51gLCCj8T0jmf?usp=sharing)].
-> ```bash
-> python test.py --layers {50, 101} 
->                --fold {0, 1, 2, 3} 
->                --benchmark pascal
->                --nshot {1, 5} 
->                --load "path_to_trained_model"
-> ```
+```bash
+python digital_dataset/generate_digital.py --sizes 128 --format npz --out generated
+```
 
+**2. Train the restoration U-Net:**
 
-> ### 2. COCO-20<sup>i</sup>
-> Pretrained models are available on our [[Google Drive](https://drive.google.com/drive/folders/1vy7QHpEx4p10xwrhpeshD3uuKJdhXiim?usp=sharing)].
-> ```bash
-> python test.py --layers {50, 101}
->                --fold {0, 1, 2, 3} 
->                --benchmark coco 
->                --nshot {1, 5} 
->                --load "path_to_trained_model"
-> ```
+```bash
+python -m scripts.train_restoration --printed generated --out checkpoints/mra_unet.keras
+```
 
-This project is built upon HSNet:https://github.com/juhongm999/hsnet
--->
+**3. Train the language classifier:**
+
+```bash
+python -m scripts.train_language --unet checkpoints/mra_unet.keras --out checkpoints/language.keras
+```
+
+**4. Train and evaluate the digit classifier of a language:**
+
+```bash
+python -m scripts.train_digit --language Persian
+python -m scripts.evaluate --language Persian --model checkpoints/digit_Persian.keras
+```
+
+Available languages: Arabic, ARDIS, BanglaLekha, Chinese, English, Gujarati, Gurmukhi, ISI_Bangla, Kannada,
+Persian, Tibetan, Urdu. The training set of each language is augmented with rotations (`mranet/data.py`,
+`ROTATIONS`).
+
+**Baselines** (trained on the raw images, for comparison):
+
+```bash
+python -m scripts.train_digit --language Persian --baseline lenet5
+python -m scripts.train_digit --language Persian --baseline vgg16
+```
+
+Settings that the original release did not record, such as the degradation size of stage 1, the loss and the
+learning rates, are command-line options (`--help` lists them).
+
+## Data
+
+- [`datasets/`](datasets/README.md): the handwritten datasets, with sizes, formats and sources.
+- [`digital_dataset/`](digital_dataset/README.md): the generator of the printed DIGITal dataset.
+
+Each dataset keeps the license of its original authors. Please cite them when you use them.
+
+## Citation
+
+```bibtex
+@article{fateh2024advancing,
+  title   = {Advancing Multilingual Handwritten Numeral Recognition with Attention-driven Transfer Learning},
+  author  = {Fateh, Amirreza and Tahmasbi Birgani, Reza and Fateh, Mansoor and Abolghasemi, Vahid},
+  journal = {IEEE Access},
+  year    = {2024}
+}
+```
+
+## License
+
+The code is released under the [MIT License](LICENSE). The DIGITal dataset is for non-commercial research and
+educational use; see [digital_dataset/README.md](digital_dataset/README.md) for the terms and the note on fonts.
