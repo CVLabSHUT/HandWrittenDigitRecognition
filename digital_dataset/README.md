@@ -10,6 +10,9 @@ This folder contains the generator, the fonts it uses and a preview tool. The
 images themselves are produced on demand and are fully deterministic: the same
 fonts and settings always give the same pixels.
 
+**Download the generated dataset** (100,000 images of 128 x 128, with font-based
+splits): [doi.org/10.5281/zenodo.24181292](https://doi.org/10.5281/zenodo.24181292).
+
 <p align="center">
   <img src="assets/samples.png" width="620" alt="Generated digits for nine scripts, two fonts each">
 </p>
@@ -98,14 +101,10 @@ by font (for example, to test on fonts that were never seen in training).
 
 ## How a digit is placed: the fixed frame
 
-Fonts disagree about size. Two files rendered "at 12 pt" can produce digits of
-quite different height, and they sit at different heights inside the line because
-of each font's ascent, descent and side bearings. The first version of the
-generator used the font size as the canvas size and trusted the font's own
-measurements to centre the glyph, so digits came out clipped, tiny or off-centre
-depending on the font.
-
-The generator now ignores those metrics:
+Fonts disagree about size. Two fonts rendered "at the same size" can produce digits
+of quite different height, and the digits sit at different heights because of each
+font's ascent, descent and side bearings. The generator therefore ignores the font
+metrics and places every digit by its actual ink:
 
 1. The digit is drawn large on an empty canvas, and the pixels that were actually
    inked are measured.
@@ -118,9 +117,9 @@ Because the scale is shared by the ten digits of a font, proportions inside a
 font are preserved: the Arabic zero stays a small dot and a "1" stays narrow.
 
 <p align="center">
-  <img src="assets/old_vs_new.png" width="760" alt="Old and new generator for the digit 5 in 14 fonts">
+  <img src="assets/fixed_frame.png" width="760" alt="The digit 5 in 14 different fonts, centred in the fixed frame">
 </p>
-<p align="center"><em>The digit 5 in 14 different fonts. Top row: first version of the generator (size, position and clipping depend on the font). Bottom row: current generator; the red square is the fixed frame.</em></p>
+<p align="center"><em>The digit 5 in 14 different fonts. Each digit is cropped to its ink and centred; the largest digit of every font fills the same fixed frame (red square).</em></p>
 
 The placement was checked on all 1,140 usable fonts at 32 x 32 with the default fill: the
 largest digit of every font is exactly 22 pixels (0.7 x 32, rounded) and its
@@ -152,7 +151,8 @@ centre is within half a pixel of the image centre.
 ## License and citation
 
 The DIGITal dataset is released for non-commercial research and educational use.
-If you use it, please cite the paper:
+If you use it, please cite our paper (and the
+[Zenodo record](https://doi.org/10.5281/zenodo.24181292) of the dataset):
 
 ```bibtex
 @article{fateh2024advancing,

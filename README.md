@@ -4,6 +4,9 @@ Code for the paper **Advancing Multilingual Handwritten Numeral Recognition with
 by Amirreza Fateh, Reza Tahmasbi Birgani, Mansoor Fateh and Vahid Abolghasemi, published in
 [IEEE Access, 2024](https://ieeexplore.ieee.org/document/10474004).
 
+**Dataset:** the generated DIGITal dataset (100,000 printed digit images, 128 x 128) is available on Zenodo:
+[doi.org/10.5281/zenodo.24181292](https://doi.org/10.5281/zenodo.24181292).
+
 <p align="center">
   <img src="assets/overview.png" width="760" alt="Overview of the method">
 </p>
@@ -89,10 +92,14 @@ learning rates, are command-line options (`--help` lists them).
 
 - [`datasets/`](datasets/README.md): the handwritten datasets, with sizes, formats and sources.
 - [`digital_dataset/`](digital_dataset/README.md): the generator of the printed DIGITal dataset.
+- **Download the generated DIGITal dataset** (100,000 images, with font-based splits):
+  [doi.org/10.5281/zenodo.24181292](https://doi.org/10.5281/zenodo.24181292).
 
-Each dataset keeps the license of its original authors. Please cite them when you use them.
+Each handwritten dataset keeps the license of its original authors. Please cite them when you use them.
 
 ## Citation
+
+If you find this work useful, please cite our paper:
 
 ```bibtex
 @article{fateh2024advancing,
@@ -100,6 +107,19 @@ Each dataset keeps the license of its original authors. Please cite them when yo
   author  = {Fateh, Amirreza and Tahmasbi Birgani, Reza and Fateh, Mansoor and Abolghasemi, Vahid},
   journal = {IEEE Access},
   year    = {2024}
+}
+```
+
+If you use the DIGITal dataset, please also cite the paper above and the dataset record:
+
+```bibtex
+@dataset{fateh2026digital,
+  title     = {{DIGITal}: a synthetic multilingual dataset of 100,000 printed digit images},
+  author    = {Fateh, Amirreza and Tahmasbi Birgani, Reza and Fateh, Mansoor and Abolghasemi, Vahid},
+  year      = {2026},
+  version   = {1.0},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24181292}
 }
 ```
 

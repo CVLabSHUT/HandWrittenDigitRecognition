@@ -5,9 +5,7 @@ rescaled so that the largest digit of the font fills a fixed square frame; the
 frame is placed in the middle of the image. The result does not depend on the metrics
 (ascent, descent, side bearings, default em size) of a particular font, so two
 fonts rendered "at the same size" end up with digits of the same size and
-position. The old generator used the requested font size as the canvas size
-and trusted the font metrics for centring, which gave digits that were clipped,
-tiny or off-centre depending on the font.
+position.
 
 Example:
     python digital_dataset/generate_digital.py --out generated \
